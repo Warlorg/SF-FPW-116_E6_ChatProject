@@ -1,0 +1,152 @@
+{% extends 'default.html' %}
+
+{% block title %}
+Chat Room: {{ room.slug }} |
+{% endblock title %}
+
+{% block content %}
+<div class="p-10 lg:p-20 text-center">
+    <h1 class="text-3xl lg:text-6xl text-black">{{ room.slug }}</h1>
+</div>
+
+<div class="lg:w-2/4 mx-4 lg:mx-auto p-4 bg-white rounded-xl">
+    <div class="chat-messages space-y-3" id="chat-messages">
+        {% for m in messages %}
+        <b>{{ m.user.username }}</b>: {{ m.content }}<br>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="lg:w-2/4 mt-6 mx-4 lg:mx-auto p-4 bg-white rounded-xl">
+    <form method="post" action="." class="flex">
+        {% csrf_token %}
+        <input type="text" name="content" class="flex-1 mr-3" placeholder="Your message..." id="chat-message-input">
+        <button
+            class="px-5 py-3 rounded-xl text-black bg-teal-600 hover:bg-teal-700"
+            id="chat-message-submit">Submit</button>
+    </form>
+</div>
+<hr>
+<p>To send a personal message choose a connected person at the list below</p>
+                <div id="connections"></div>
+                <p>***</p>
+                <p>Users in the Room "{{ room.slug }}":</p>
+                <div id="users-in-room">nobody</div>
+            </form>
+        </div>
+        {% comment %} Get data for username and chatbox name{% endcomment %}
+{% endblock %}
+
+{% block scripts %}
+{{ room.slug|json_script:"json-roomname" }}
+{{ request.user.username|json_script:"json-username" }}
+
+<script>
+    base_url =  document.location.origin;
+    const roomName = JSON.parse(document.getElementById('json-roomname').textContent);
+    const userName = JSON.parse(document.getElementById('json-username').textContent);
+
+    const chatSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/'
+        + roomName
+        + '/'
+    );
+
+    chatSocket.onclose = function(e) {
+        console.log('onclose')
+    }
+
+    chatSocket.onmessage = async function(e) {
+        const data = JSON.parse(e.data);
+        suffix = data.from === 'room' ? '' : ' to You';
+
+        if (data.message) {
+            document.querySelector('#chat-messages').innerHTML += ('<b>' + data.username.toUpperCase() +
+                suffix + '</b>: ' + data.message + '<br>');
+        } else {
+            alert('The message was empty!')
+        }
+
+        scrollToBottom();
+        await usersOfRoom(data.usernames);
+    };
+
+    document.querySelector('#chat-message-input').focus();
+    document.querySelector('#chat-message-input').onkeyup = function(e) {
+        if (e.keyCode === 13) {
+            document.querySelector('#chat-message-submit').click();
+        }
+    };
+
+    document.querySelector('#chat-message-submit').addEventListener('click', function (e) {
+                const messageInputDom = document.querySelector('#chat-message-input');
+                const message = messageInputDom.value;
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'username': userName,
+                    'whom': 'room',
+                }));
+                messageInputDom.value = '';
+                return false;
+            });
+    document.querySelector('#leave-room-submit').addEventListener('click', function (e) {
+                document.location.replace(`${base_url}/chat_app/`);
+            });
+
+    /**
+    * A function for finding the messages element, and scroll to the bottom of it.
+    */
+    function scrollToBottom() {
+        let objDiv = document.getElementById("chat-messages");
+        objDiv.scrollTop = objDiv.scrollHeight;
+    }
+
+    // Add this below the function to trigger the scroll on load.
+    scrollToBottom();
+
+    function sendToUser(channelName) {
+                tagS = `${channelName.split('!')[1]}-input`;
+                const messageInputDom = document.getElementById(tagS);
+                const message = messageInputDom.value;
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'username': userName,
+                    'whom': channelName,
+                }));
+                messageInputDom.value = '';
+                return false;
+            };
+
+            function closeToUser(tagClose) {
+                removed = document.getElementById(tagClose);
+                document.getElementById('connections').removeChild(removed);
+            };
+
+            function writeToUser (channelName, userName) {
+                tagP = 'p-${channelName.split('!')[1]}';
+                tagS = '${channelName.split('!')[1]}';
+                userMessageInput = '<div id="' + tagS + '-close"><div class="form-group">{% csrf_token %}'
+                    + '<input class="form-control" placeholder="Write your message to ' + userName + ' here" id="' + tagS
+                    + `-input" type="text"/></div>`
+                    + `<div style="display: flex;"><input class="btn btn-primary" id="` + tagS + `-submit" type="button"`
+                    + `onClick="sendToUser('` + channelName + `')" style="width: 65%;" value="Send to ` + userName
+                    + `"/>&nbsp;<input class="btn btn-primary" type="button" `
+                    + `onClick="closeToUser('` + tagS + `-close')" style="width: 33%;" value="Close"/></div><br></div>`;
+                document.getElementById('connections').innerHTML += userMessageInput;
+            };
+
+            function usersOfRoom (userDict) {
+                if (userDict != 0) {
+                    document.querySelector('#users-in-room').innerHTML = '';
+                }
+                for (let u in userDict) {
+                    tagU = u.split('!')[1];
+                    roomUser = `<p id="p-` + tagU + `"><button type="button" id="` + tagU + `" onClick="writeToUser('`
+                        + u + `', '` + userDict[u] + `')">` + userDict[u] + `</button></p>`;
+                    document.querySelector('#users-in-room').insertAdjacentHTML('beforeend', roomUser);
+                }
+            };
+</script>
+{% endblock %}

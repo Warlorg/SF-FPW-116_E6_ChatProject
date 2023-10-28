@@ -1,0 +1,29 @@
+{% extends 'default.html' %}
+
+{% block title %}
+Welcome |
+{% endblock %}
+
+{% block content %}
+<br>
+<div class="p-10 lg:p-20 text-center">
+    <h1 class="text-3xl lg:text-6xl text-black">Django Chat</h1>
+</div>
+<br>
+<center><h2>Hello! Welcome to my chat site!</h2></center>
+{% if user.is_authenticated %}
+        <br>
+        {% if user.profile.avatar %}
+            <img src="{{ user.profile.avatar.url }}" alt="Avatar" class="logo-image"
+                style="float: left; width: 50px; height: 50px; border-radius: 15px;">
+        {% endif %}
+<a href="/rooms/" class="text-black hover:text-gray-200"><h3>List of rooms available</h3></a>
+
+{% else %}
+<hr>
+        <h2>Log in/Sign up</h2>
+        <hr>
+        <a class="nav-link" href="{% url 'login' %}">Log in</a>
+        <a class="nav-link" href="/accounts/signup/">Sign up</a>
+{% endif %}
+{% endblock content %}

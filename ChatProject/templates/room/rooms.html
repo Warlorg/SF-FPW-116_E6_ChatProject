@@ -1,0 +1,75 @@
+{% extends 'default.html' %}
+
+{% block title %}
+Rooms |
+{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <br>
+    <div class="p-10 lg:p-20 text-center">
+        <h1 class="text-3xl lg:text-6xl text-black">Rooms</h1>
+    </div>
+    {% if user.profile.avatar %}
+    <img src="{{ user.profile.avatar.url }}" alt="Avatar" class="logo-image"
+         style="float: left; width: 50px; height: 50px; border-radius: 15px;">
+    {% endif %}
+
+    <p>What chat room would you like to create?</p>
+        <br>
+        <input class="form-control" id="room-name-input" type="text" size="100"
+               placeholder="Latin letters, numbers and spaces only!!!"><br>
+        <input class="btn btn-primary btn-lg btn-block"
+               id="room-name-submit" type="button" value="Create room"><br>
+        <hr>
+        <h4>Choose room to enter:</h4>
+        {% for room in rooms %}
+            <div class="w-full lg:w-1/4 px-5 py-3">
+                <div class="p-3 bg-grey shadow rounded-xl text-center">
+                    <h2 class="mb-3 text-2xl font-semi-bold">{{ room.slug }}</h2>
+
+                    <a href="{% url 'room' room.slug %}" class="px-5 py-3 block rounded-xl
+                    text-blue bg-teal-600 hover:bg-teal-700">Join</a>
+                </div>
+            </div>
+        {% endfor %}
+{% else %}
+        <h2>Log in or Sign up</h2>
+        <hr>
+        <a class="nav-link" href="/chat_app/login/">Log in</a>
+        <br>
+        <a class="nav-link" href="/accounts/signup/">Sign up</a>
+{% endif %}
+        <script>
+            document.querySelector('#room-name-input').focus();
+            document.querySelector('#room-name-input').onkeyup = function(e) {
+                if (e.keyCode === 13) {
+                    document.querySelector('#room-name-submit').click();
+                }
+            };
+
+            document.querySelector('#room-name-submit').onclick = function(e) {
+                var roomName = document.querySelector('#room-name-input').value;
+                if (/^[a-z0-9\s]+$/i.test(roomName)) {
+                    window.location.pathname = '/rooms/' + roomName + '/';
+                } else { alert('Wrong Room name! Latin letters, numbers and spaces only'); }
+            };
+
+            function roomsList(rooms) {
+                if (rooms.length != 0) {
+                    roomsOpened = '';
+                    for (let room of rooms) {
+                        roomsOpened += '<p><a href="/' + room + '/">' + room + '</a></p>';
+                    }
+                } else {
+                    roomsOpened = 'No rooms opened yet. Create yours!'
+                };
+                document.getElementById("rooms-list").innerHTML = roomsOpened;
+            }
+
+            rooms = JSON.parse(document.getElementById('rooms').textContent);
+            roomsList(rooms);
+            setTimeout(roomsLoader, 1000, roomsList);
+            setInterval(roomsLoader, 30000, roomsList);
+        </script>
+{% endblock %}
