@@ -23,7 +23,8 @@ Chat Room: {{ room.slug }} |
         <input type="text" name="content" class="flex-1 mr-3" placeholder="Your message..." id="chat-message-input">
         <button
             class="px-5 py-3 rounded-xl text-black bg-teal-600 hover:bg-teal-700"
-            id="chat-message-submit">Submit</button>
+            id="chat-message-submit">Submit
+        </button>
     </form>
 </div>
 <hr>
@@ -32,9 +33,7 @@ Chat Room: {{ room.slug }} |
                 <p>***</p>
                 <p>Users in the Room "{{ room.slug }}":</p>
                 <div id="users-in-room">nobody</div>
-            </form>
-        </div>
-        {% comment %} Get data for username and chatbox name{% endcomment %}
+        {% comment %} Get data for username and chatbox name {% endcomment %}
 {% endblock %}
 
 {% block scripts %}
@@ -91,9 +90,6 @@ Chat Room: {{ room.slug }} |
                 messageInputDom.value = '';
                 return false;
             });
-    document.querySelector('#leave-room-submit').addEventListener('click', function (e) {
-                document.location.replace(`${base_url}/chat_app/`);
-            });
 
     /**
     * A function for finding the messages element, and scroll to the bottom of it.
@@ -107,7 +103,7 @@ Chat Room: {{ room.slug }} |
     scrollToBottom();
 
     function sendToUser(channelName) {
-                tagS = `${channelName.split('!')[1]}-input`;
+                tagS = `${channelName.split('.')[1]}-input`;
                 const messageInputDom = document.getElementById(tagS);
                 const message = messageInputDom.value;
                 chatSocket.send(JSON.stringify({
@@ -125,8 +121,8 @@ Chat Room: {{ room.slug }} |
             };
 
             function writeToUser (channelName, userName) {
-                tagP = 'p-${channelName.split('!')[1]}';
-                tagS = '${channelName.split('!')[1]}';
+                tagP = 'p-${channelName.split(',')[1]}';
+                tagS = '${channelName.split(',')[1]}';
                 userMessageInput = '<div id="' + tagS + '-close"><div class="form-group">{% csrf_token %}'
                     + '<input class="form-control" placeholder="Write your message to ' + userName + ' here" id="' + tagS
                     + `-input" type="text"/></div>`
