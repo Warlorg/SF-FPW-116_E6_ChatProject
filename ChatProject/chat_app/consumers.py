@@ -1,4 +1,5 @@
 import json
+
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import User
 from asgiref.sync import sync_to_async
@@ -28,6 +29,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data):
         data = json.loads(text_data)
+        print(data)
         message = data['message']
         username = data['username']
         room = data['room']

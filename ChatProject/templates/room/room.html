@@ -85,7 +85,7 @@ Chat Room: {{ room.slug }} |
                 chatSocket.send(JSON.stringify({
                     'message': message,
                     'username': userName,
-                    'whom': 'room',
+                    'room': roomName,
                 }));
                 messageInputDom.value = '';
                 return false;
